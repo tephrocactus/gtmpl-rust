@@ -24,6 +24,7 @@ pub struct Tree {
     id: TreeId,
     pub root: Option<Nodes>,
     vars: Vec<String>,
+    pub fields: HashSet<String>,
 }
 
 impl Parser {
@@ -51,6 +52,7 @@ impl Tree {
             id,
             root: None,
             vars: vec![],
+            fields: Default::default(),
         }
     }
 
@@ -644,11 +646,11 @@ impl Parser {
                         chain.add(&field.val);
                     }
                     let n = match typ {
-                        NodeType::Field => Nodes::Field(FieldNode::new(
-                            self.tree_id,
-                            chain.pos(),
-                            &chain.to_string(),
-                        )),
+                        NodeType::Field => {
+                            let field = chain.to_string();
+                            self.tree.as_mut().unwrap().fields.insert(field.clone());
+                            Nodes::Field(FieldNode::new(self.tree_id, chain.pos(), &field))
+                        }
                         NodeType::Variable => Nodes::Variable(VariableNode::new(
                             self.tree_id,
                             chain.pos(),
@@ -684,7 +686,9 @@ impl Parser {
                 Nodes::Variable(self.use_var(self.tree_id, token.pos, &token.val)?)
             }
             ItemType::ItemField => {
-                Nodes::Field(FieldNode::new(self.tree_id, token.pos, &token.val))
+                let field = &token.val;
+                self.tree.as_mut().unwrap().fields.insert(field.clone());
+                Nodes::Field(FieldNode::new(self.tree_id, token.pos, &field))
             }
             ItemType::ItemBool => {
                 Nodes::Bool(BoolNode::new(self.tree_id, token.pos, token.val == "true"))
