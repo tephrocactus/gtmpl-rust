@@ -19,6 +19,7 @@ pub struct Parser {
     max_tree_id: TreeId,
 }
 
+#[derive(Clone)]
 pub struct Tree {
     name: String,
     id: TreeId,
